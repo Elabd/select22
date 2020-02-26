@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <link rel="stylesheet" href="css/bootstrap.css" /> -->
+
+    <link rel="stylesheet" href="css/select2.min.css">
+    <script type="text/javascript" src='js/jquery-3.4.1.js'></script>
+
+    <script type="script" src="js/select2.full.min.js"></script>
+    <script src="js/select2.min.js"></script>
+
+</head>
+
+<body>
+   <div class="container">
+    <select id="e1" class="js-example-responsive"  multiple="multiple" style="width: 75%">
+    </select>
+
+  
+   </div>
+</body>
+<script>
+    $("#e1").select2({
+        closeOnSelect: false,
+        allowClear: true ,
+        width: 'resolve',
+
+
+        ajax: {
+            url: "https://api.github.com/search/repositories",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term ||"1", // search term
+                    page: params.page
+                };
+            },
+            processResults: function (data, params) {
+                // parse the results into the format expected by Select2
+                // since we are using custom formatting functions we do not need to
+                // alter the remote JSON data, except to indicate that infinite
+                // scrolling can be used
+
+                
+
+                params.page = params.page || 1;
+                var dd = $.map(data.items, function (obj) {
+                    var newOption = new Option(obj.full_name, obj.id, false, false);
+$('#e1').append(newOption).trigger('change').trigger('change.select2');;
+  return{id:obj.id ,text:obj.full_name , selected: false};
+  
+});
+console.log(dd);     
+return {
+                    results: dd,
+                    pagination: {
+                        more: (params.page * 30) < data.total_count
+                    }
+                };
+            },
+            cache: true
+        },
+        placeholder: 'Search for a repository',
+        //minimumInputLength: 1,
+        // templateResult: formatRepo,
+        // templateSelection: formatRepoSelection,
+        
+    });
+
+    function formatRepo(repo) {
+        if (repo.loading) {
+            return repo.text;
+        }
+
+        var $container = $(
+            "<option value='" + repo.id+"'>'" + repo.full_name+"'</option>"
+        );
+        return $container;
+    }
+
+    function formatRepoSelection(repo) {
+        return repo.full_name || repo.text;
+    }
+    $('#e1').siblings('.select2-container').append('<input type="checkbox" id="checkbox" >Select All');
+
+    $(document).ready(function() {
+    $("#checkbox").click(function(){
+      if($("#checkbox").is(':checked') ){ //select all
+        $("#e1").find('option').prop("selected",true);
+        $("#e1").trigger('change').trigger('change.select2');
+      } else { //deselect all
+        // $("#e1").find('option').prop("selected",false);
+        // $("#e1").trigger('change');
+        $('#e1').val(null).trigger('change').trigger('change.select2');
+
+      }
+  });
+});
+$("#e1").on("select2:unselect", function (e) {
+             var value=   e.params.data.id;
+            //  alert(value);
+            var wanted_option = $('#e1 option[value="'+ value +'"]');
+  wanted_option.prop('selected', false);
+    }).trigger('change.select2');
+</script>
+
+</html>
